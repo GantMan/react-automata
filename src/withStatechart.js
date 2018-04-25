@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Machine, State, StateNode } from 'xstate'
 import idx from 'idx'
+import invariant from 'invariant'
 import { getComponentName, isStateless, stringify } from './utils'
 
 const withStatechart = (statechart, options = {}) => Component => {
@@ -104,6 +105,8 @@ const withStatechart = (statechart, options = {}) => Component => {
           this.devTools.send(this.state.event, this.state)
         }
       }
+
+      this.isTransitioning = false
     }
 
     handleRef = element => {
@@ -111,6 +114,12 @@ const withStatechart = (statechart, options = {}) => Component => {
     }
 
     handleTransition = (event, updater) => {
+      invariant(
+        !this.isTransitioning,
+        'Cannot transition in the middle of a transition.'
+      )
+      this.isTransitioning = true
+
       if (idx(this, _ => _.instance.componentWillTransition)) {
         this.instance.componentWillTransition(event)
       }
